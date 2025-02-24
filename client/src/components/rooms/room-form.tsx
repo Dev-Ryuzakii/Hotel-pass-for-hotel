@@ -71,7 +71,7 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
       return apiRequest("POST", "/api/hotel/rooms", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hotel/rooms"] });
       toast({ title: `Room ${room ? "updated" : "created"} successfully` });
       onSuccess();
     },
