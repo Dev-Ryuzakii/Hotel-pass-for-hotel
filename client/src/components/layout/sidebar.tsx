@@ -1,13 +1,13 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, BedDouble, Menu } from "lucide-react";
+import { LayoutDashboard, Settings, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Rooms", href: "/rooms", icon: BedDouble },
+  { name: "Settings", href: "/settings", icon: Settings },
 ];
 
 function NavLinks() {

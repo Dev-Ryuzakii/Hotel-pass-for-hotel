@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BedDouble, Users, DollarSign, Percent } from "lucide-react";
+import { BedDouble, Users, Banknote, Percent } from "lucide-react";
 import type { Room } from "@shared/schema";
 
 interface StatsCardsProps {
@@ -37,10 +37,10 @@ export default function StatsCards({ rooms }: StatsCardsProps) {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">Average Price</CardTitle>
-          <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <Banknote className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">${averagePrice.toFixed(2)}</div>
+          <div className="text-2xl font-bold">₦{averagePrice.toLocaleString()}</div>
         </CardContent>
       </Card>
 

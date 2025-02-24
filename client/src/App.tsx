@@ -6,7 +6,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
-import Rooms from "@/pages/rooms";
+import Settings from "@/pages/settings";
 import AuthPage from "@/pages/auth";
 import Sidebar from "@/components/layout/sidebar";
 
@@ -21,7 +21,7 @@ function Router() {
           <main className="flex-1 overflow-auto bg-background pl-0 lg:pl-72">
             <Switch>
               <ProtectedRoute path="/" component={Dashboard} />
-              <ProtectedRoute path="/rooms" component={Rooms} />
+              <ProtectedRoute path="/settings" component={Settings} />
               <Route component={NotFound} />
             </Switch>
           </main>
