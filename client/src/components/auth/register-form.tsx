@@ -12,22 +12,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { insertHotelSchema } from "@shared/schema";
 
-const registerSchema = z.object({
-  name: z.string().min(1, "Hotel name is required"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  phone: z.string().min(1, "Phone number is required"),
-});
-
-type RegisterValues = z.infer<typeof registerSchema>;
+type RegisterValues = z.infer<typeof insertHotelSchema>;
 
 export default function RegisterForm() {
   const { registerMutation } = useAuth();
   const form = useForm<RegisterValues>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(insertHotelSchema),
     defaultValues: {
       name: "",
       email: "",

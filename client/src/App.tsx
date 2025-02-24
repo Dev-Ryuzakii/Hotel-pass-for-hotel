@@ -17,7 +17,8 @@ function Router() {
       <Route path="*">
         <div className="flex h-screen">
           <Sidebar />
-          <main className="flex-1 overflow-auto bg-background">
+          {/* Add pl-0 lg:pl-72 to offset main content from sidebar */}
+          <main className="flex-1 overflow-auto bg-background pl-0 lg:pl-72">
             <Switch>
               <ProtectedRoute path="/" component={Dashboard} />
               <ProtectedRoute path="/rooms" component={Rooms} />

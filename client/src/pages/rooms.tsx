@@ -9,11 +9,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import RoomForm from "@/components/rooms/room-form";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Pencil, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Pencil, Trash2, MoreVertical, ImageIcon } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import type { Room } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
@@ -38,6 +44,23 @@ export default function Rooms() {
     onError: (error: Error) => {
       toast({
         title: "Error deleting room",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  const updateAvailabilityMutation = useMutation({
+    mutationFn: async ({ id, count }: { id: number; count: number }) => {
+      await apiRequest("PATCH", `/api/hotel/rooms/${id}/availability`, { count });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/hotel/rooms"] });
+      toast({ title: "Room availability updated" });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error updating availability",
         description: error.message,
         variant: "destructive"
       });
@@ -73,116 +96,96 @@ export default function Rooms() {
         </Dialog>
       </div>
 
-      {/* Mobile view: Cards */}
-      <div className="grid grid-cols-1 gap-4 md:hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {rooms?.map((room) => (
-          <Card key={room.id}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg">{room.name}</CardTitle>
+          <Card key={room.id} className="relative">
+            {room.images.length > 0 && (
+              <img
+                src={room.images[0]}
+                alt={room.name}
+                className="w-full h-48 object-cover rounded-t-lg"
+              />
+            )}
+            {!room.images.length && (
+              <div className="w-full h-48 bg-muted flex items-center justify-center rounded-t-lg">
+                <ImageIcon className="h-12 w-12 text-muted-foreground" />
+              </div>
+            )}
+            <CardHeader className="pt-4">
+              <div className="flex justify-between items-start">
+                <CardTitle className="text-xl">{room.name}</CardTitle>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => {
+                      setSelectedRoom(room);
+                      setIsOpen(true);
+                    }}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit Details
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => 
+                      updateAvailabilityMutation.mutate({ 
+                        id: room.id, 
+                        count: 1 
+                      })
+                    }>
+                      Mark Available
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => 
+                      updateAvailabilityMutation.mutate({ 
+                        id: room.id, 
+                        count: -1 
+                      })
+                    }>
+                      Mark Booked
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => deleteMutation.mutate(room.id)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Type</span>
-                <span>{room.type}</span>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Type</p>
+                  <p className="font-medium">{room.type}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Price</p>
+                  <p className="font-medium">${room.price}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Capacity</p>
+                  <p className="font-medium">{room.capacity} persons</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Availability</p>
+                  <p className="font-medium">{room.availableRooms}/{room.totalRooms}</p>
+                </div>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Price</span>
-                <span>${room.price}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Capacity</span>
-                <span>{room.capacity} persons</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Available/Total</span>
-                <span>{room.availableRooms}/{room.totalRooms}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Status</span>
+              <div className="mt-2">
                 <Badge variant={room.availableRooms > 0 ? "default" : "destructive"}>
                   {room.availableRooms > 0 ? "Available" : "Fully Booked"}
                 </Badge>
               </div>
-              <div className="flex justify-end gap-2 mt-4">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setSelectedRoom(room);
-                    setIsOpen(true);
-                  }}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => deleteMutation.mutate(room.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
             </CardContent>
+            <CardFooter>
+              <p className="text-sm text-muted-foreground line-clamp-2">{room.description}</p>
+            </CardFooter>
           </Card>
         ))}
-      </div>
-
-      {/* Desktop view: Table */}
-      <div className="hidden md:block">
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Price</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Available/Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rooms?.map((room) => (
-                <TableRow key={room.id}>
-                  <TableCell className="font-medium">{room.name}</TableCell>
-                  <TableCell>{room.type}</TableCell>
-                  <TableCell>${room.price}</TableCell>
-                  <TableCell>{room.capacity} persons</TableCell>
-                  <TableCell>
-                    {room.availableRooms}/{room.totalRooms}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={room.availableRooms > 0 ? "default" : "destructive"}>
-                      {room.availableRooms > 0 ? "Available" : "Fully Booked"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedRoom(room);
-                          setIsOpen(true);
-                        }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteMutation.mutate(room.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
       </div>
     </div>
   );
