@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import RoomForm from "@/components/rooms/room-form";
+import { useWebSocket } from "@/hooks/use-websocket";
 import type { Room } from "@shared/schema";
 
 export default function Dashboard() {
@@ -18,6 +19,9 @@ export default function Dashboard() {
   const { data: rooms, isLoading } = useQuery<Room[]>({
     queryKey: ["/api/hotel/rooms"],
   });
+
+  // Initialize WebSocket connection
+  useWebSocket();
 
   if (isLoading) {
     return <div>Loading...</div>;

@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer } from "http";
+import { WebSocketServer } from "ws";
 import { storage } from "./storage";
 import { insertRoomSchema } from "@shared/schema";
 import { setupAuth } from "./auth";
@@ -15,6 +16,42 @@ function requireAuth(req: Express.Request, res: Express.Response, next: Express.
 export async function registerRoutes(app: Express) {
   // Setup authentication routes
   setupAuth(app);
+
+  // Create HTTP server
+  const server = createServer(app);
+
+  // Setup WebSocket server
+  const wss = new WebSocketServer({ server, path: '/ws' });
+
+  // WebSocket connection handling
+  wss.on('connection', (ws) => {
+    console.log('Client connected to WebSocket');
+
+    ws.on('message', (message) => {
+      try {
+        const data = JSON.parse(message.toString());
+        console.log('Received:', data);
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('Client disconnected from WebSocket');
+    });
+  });
+
+  // Broadcast room updates to all connected clients
+  function broadcastRoomUpdate(room: any) {
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({
+          type: 'ROOM_UPDATE',
+          room
+        }));
+      }
+    });
+  }
 
   // Public room routes (for booking page)
   app.get("/api/rooms", async (req, res) => {
@@ -41,6 +78,7 @@ export async function registerRoutes(app: Express) {
     }
 
     const room = await storage.createRoom(req.user.id, result.data);
+    broadcastRoomUpdate(room);
     res.status(201).json(room);
   });
 
@@ -62,6 +100,7 @@ export async function registerRoutes(app: Express) {
       }
 
       const updatedRoom = await storage.updateRoom(parseInt(req.params.id), result.data);
+      broadcastRoomUpdate(updatedRoom);
       res.json(updatedRoom);
     } catch (error) {
       res.status(404).json({ message: "Room not found" });
@@ -105,11 +144,12 @@ export async function registerRoutes(app: Express) {
       }
 
       const updatedRoom = await storage.updateRoomAvailability(parseInt(req.params.id), count);
+      broadcastRoomUpdate(updatedRoom);
       res.json(updatedRoom);
     } catch (error) {
       res.status(404).json({ message: "Room not found" });
     }
   });
 
-  return createServer(app);
+  return server;
 }
