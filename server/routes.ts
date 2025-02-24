@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer } from "http";
-import { WebSocketServer } from "ws";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import { insertRoomSchema } from "@shared/schema";
 import { setupAuth } from "./auth";
