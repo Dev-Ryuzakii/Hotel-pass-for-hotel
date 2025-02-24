@@ -25,41 +25,63 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import type { Room } from "@shared/schema";
 import { insertRoomSchema, roomTypes, amenityOptions } from "@shared/schema";
+import type { z } from "zod";
 
 interface RoomFormProps {
   room?: Room | null;
   onSuccess: () => void;
 }
 
+type FormData = z.infer<typeof insertRoomSchema>;
+
 export default function RoomForm({ room, onSuccess }: RoomFormProps) {
   const { toast } = useToast();
-  const form = useForm({
+  const form = useForm<FormData>({
     resolver: zodResolver(insertRoomSchema),
-    defaultValues: room || {
+    defaultValues: room ? {
+      name: room.name,
+      type: room.type,
+      capacity: room.capacity,
+      price: room.price,
+      description: room.description,
+      amenities: room.amenities,
+      images: room.images,
+      totalRooms: room.totalRooms,
+      availableRooms: room.availableRooms,
+      isAvailable: room.isAvailable,
+    } : {
       name: "",
       type: "Standard",
       capacity: 2,
       price: 100,
       description: "",
       amenities: [],
-      imageUrl: "https://images.unsplash.com/photo-1618773928121-c32242e63f39",
+      images: [],
       totalRooms: 1,
       availableRooms: 1,
+      isAvailable: true,
     },
   });
 
   const mutation = useMutation({
-    mutationFn: async (data: typeof form.getValues) => {
+    mutationFn: async (data: FormData) => {
       if (room) {
-        return apiRequest("PATCH", `/api/rooms/${room.id}`, data);
+        return apiRequest("PATCH", `/api/hotel/rooms/${room.id}`, data);
       }
-      return apiRequest("POST", "/api/rooms", data);
+      return apiRequest("POST", "/api/hotel/rooms", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/rooms"] });
       toast({ title: `Room ${room ? "updated" : "created"} successfully` });
       onSuccess();
     },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   return (
@@ -104,7 +126,7 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="capacity"
@@ -154,7 +176,7 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
           render={() => (
             <FormItem>
               <FormLabel>Amenities</FormLabel>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
                 {amenityOptions.map((amenity) => (
                   <FormField
                     key={amenity}
@@ -192,7 +214,26 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
           )}
         />
 
-        <div className="grid grid-cols-2 gap-4">
+        <FormField
+          control={form.control}
+          name="images"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Image URLs</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="Enter image URLs (one per line, max 5)"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value.split('\n').filter(Boolean))}
+                  value={field.value.join('\n')}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="totalRooms"
