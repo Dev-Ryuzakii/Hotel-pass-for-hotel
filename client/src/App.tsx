@@ -8,16 +8,17 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Settings from "@/pages/settings";
 import AuthPage from "@/pages/auth";
+import ForgotPassword from "@/pages/forgot-password";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
   return (
     <Switch>
       <Route path="/auth" component={AuthPage} />
+      <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="*">
-        <div className="flex h-screen">
+        <div className="flex min-h-screen flex-col lg:flex-row">
           <Sidebar />
-          {/* Add pl-0 lg:pl-72 to offset main content from sidebar */}
           <main className="flex-1 overflow-auto bg-background pl-0 lg:pl-72">
             <Switch>
               <ProtectedRoute path="/" component={Dashboard} />

@@ -12,6 +12,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Link } from "wouter";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -62,6 +63,13 @@ export default function LoginForm() {
             </FormItem>
           )}
         />
+        <div className="flex justify-end">
+          <Link href="/forgot-password">
+            <a className="text-sm text-primary hover:underline">
+              Forgot password?
+            </a>
+          </Link>
+        </div>
         <Button
           type="submit"
           className="w-full"

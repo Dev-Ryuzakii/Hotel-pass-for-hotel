@@ -9,6 +9,9 @@ export interface IStorage {
   getHotel(id: number): Promise<Hotel | undefined>;
   getHotelByEmail(email: string): Promise<Hotel | undefined>;
   createHotel(hotel: InsertHotel): Promise<Hotel>;
+  updateHotel(id: number, hotel: Partial<Hotel>): Promise<Hotel>;
+  saveResetToken(hotelId: number, token: string, expiry: Date): Promise<void>;
+  getResetToken(token: string): Promise<{ hotelId: number, expiry: Date } | undefined>;
 
   // Room management
   getRooms(hotelId?: number): Promise<Room[]>;
@@ -22,9 +25,16 @@ export interface IStorage {
   sessionStore: session.Store;
 }
 
+interface ResetToken {
+  hotelId: number;
+  token: string;
+  expiry: Date;
+}
+
 export class MemStorage implements IStorage {
   private hotels: Map<number, Hotel>;
   private rooms: Map<number, Room>;
+  private resetTokens: Map<string, ResetToken>;
   private currentHotelId: number;
   private currentRoomId: number;
   readonly sessionStore: session.Store;
@@ -32,6 +42,7 @@ export class MemStorage implements IStorage {
   constructor() {
     this.hotels = new Map();
     this.rooms = new Map();
+    this.resetTokens = new Map();
     this.currentHotelId = 1;
     this.currentRoomId = 1;
     this.sessionStore = new MemoryStore({
@@ -55,6 +66,27 @@ export class MemStorage implements IStorage {
     const hotel: Hotel = { id, ...insertHotel, createdAt: new Date() };
     this.hotels.set(id, hotel);
     return hotel;
+  }
+
+  async updateHotel(id: number, update: Partial<Hotel>): Promise<Hotel> {
+    const hotel = await this.getHotel(id);
+    if (!hotel) throw new Error("Hotel not found");
+
+    const updatedHotel = { ...hotel, ...update };
+    this.hotels.set(id, updatedHotel);
+    return updatedHotel;
+  }
+
+  async saveResetToken(hotelId: number, token: string, expiry: Date): Promise<void> {
+    this.resetTokens.set(token, { hotelId, token, expiry });
+  }
+
+  async getResetToken(token: string): Promise<{ hotelId: number; expiry: Date } | undefined> {
+    const resetToken = this.resetTokens.get(token);
+    if (!resetToken || resetToken.expiry < new Date()) {
+      return undefined;
+    }
+    return { hotelId: resetToken.hotelId, expiry: resetToken.expiry };
   }
 
   // Room methods
