@@ -1,0 +1,1 @@
+# Hotel-pass-for-hotel
