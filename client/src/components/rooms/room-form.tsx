@@ -38,29 +38,31 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
   const { toast } = useToast();
   const form = useForm<FormData>({
     resolver: zodResolver(insertRoomSchema),
-    defaultValues: room ? {
-      name: room.name,
-      type: room.type,
-      capacity: room.capacity,
-      price: room.price,
-      description: room.description,
-      amenities: room.amenities,
-      images: room.images,
-      totalRooms: room.totalRooms,
-      availableRooms: room.availableRooms,
-      isAvailable: room.isAvailable,
-    } : {
-      name: "",
-      type: "Standard",
-      capacity: 2,
-      price: 100,
-      description: "",
-      amenities: [],
-      images: [],
-      totalRooms: 1,
-      availableRooms: 1,
-      isAvailable: true,
-    },
+    defaultValues: room
+      ? {
+          name: room.name,
+          type: room.type,
+          capacity: room.capacity,
+          price: room.price,
+          description: room.description,
+          amenities: room.amenities,
+          images: room.images,
+          totalRooms: room.totalRooms,
+          availableRooms: room.availableRooms,
+          isAvailable: room.isAvailable,
+        }
+      : {
+          name: "",
+          type: "Standard",
+          capacity: 2,
+          price: 100,
+          description: "",
+          amenities: [],
+          images: [],
+          totalRooms: 1,
+          availableRooms: 1,
+          isAvailable: true,
+        },
   });
 
   const mutation = useMutation({
@@ -76,17 +78,49 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
       onSuccess();
     },
     onError: (error: Error) => {
-      toast({ 
+      toast({
         title: "Error",
         description: error.message,
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
+
+  // Handle file upload
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    const fileReaders: Promise<string>[] = [];
+
+    // Convert each file to Base64
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const reader = new FileReader();
+
+      const promise = new Promise<string>((resolve) => {
+        reader.onload = () => {
+          resolve(reader.result as string);
+        };
+      });
+
+      reader.readAsDataURL(file);
+      fileReaders.push(promise);
+    }
+
+    // Update form state with Base64 images
+    Promise.all(fileReaders).then((base64Images) => {
+      const currentImages = form.getValues("images") || [];
+      form.setValue("images", [...currentImages, ...base64Images]);
+    });
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+      <form
+        onSubmit={form.handleSubmit((data) => mutation.mutate(data))}
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="name"
@@ -134,7 +168,11 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
               <FormItem>
                 <FormLabel>Capacity</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                  <Input
+                    type="number"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -148,7 +186,11 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
               <FormItem>
                 <FormLabel>Price</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                  <Input
+                    type="number"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -196,7 +238,7 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
                                   ? field.onChange([...field.value, amenity])
                                   : field.onChange(
                                       field.value?.filter((value) => value !== amenity)
-                                    )
+                                    );
                               }}
                             />
                           </FormControl>
@@ -204,7 +246,7 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
                             {amenity}
                           </FormLabel>
                         </FormItem>
-                      )
+                      );
                     }}
                   />
                 ))}
@@ -219,19 +261,33 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
           name="images"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image URLs</FormLabel>
+              <FormLabel>Upload Images</FormLabel>
               <FormControl>
-                <Textarea 
-                  placeholder="Enter image URLs (one per line, max 5)"
-                  {...field}
-                  onChange={(e) => field.onChange(e.target.value.split('\n').filter(Boolean))}
-                  value={field.value.join('\n')}
+                <Input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleFileUpload}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {/* Display uploaded images */}
+        {form.watch("images")?.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {form.watch("images").map((image, index) => (
+              <img
+                key={index}
+                src={image}
+                alt={`Uploaded ${index}`}
+                className="w-24 h-24 object-cover rounded"
+              />
+            ))}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
@@ -241,7 +297,11 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
               <FormItem>
                 <FormLabel>Total Rooms</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                  <Input
+                    type="number"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -255,7 +315,11 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
               <FormItem>
                 <FormLabel>Available Rooms</FormLabel>
                 <FormControl>
-                  <Input type="number" {...field} onChange={e => field.onChange(parseInt(e.target.value))} />
+                  <Input
+                    type="number"
+                    {...field}
+                    onChange={(e) => field.onChange(parseInt(e.target.value))}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
