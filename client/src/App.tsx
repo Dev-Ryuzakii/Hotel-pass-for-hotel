@@ -20,7 +20,7 @@ function Router() {
       <Route path="*">
         <div className="flex min-h-screen flex-col lg:flex-row">
           <Sidebar />
-          <main className="flex-1 overflow-auto bg-background pl-0 lg:pl-72">
+          <main className="flex-1 overflow-auto bg-background pl-0 lg:pl-60">
             <Switch>
               <ProtectedRoute path="/" component={Dashboard} />
               <ProtectedRoute path="/wallet" component={Wallet} />
