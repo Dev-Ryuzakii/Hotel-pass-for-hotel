@@ -41,24 +41,13 @@ app.use((req, res, next) => {
   try {
     const server = await registerRoutes(app);
 
-<<<<<<< HEAD
     // Error handling middleware
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
-=======
-  // Error handling middleware
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
->>>>>>> origin/main
-
-      res.status(status).json({ message });
-      log(`Error: ${message}`);
-      throw err;
+      res.status(status).json({ error: message });
     });
 
-<<<<<<< HEAD
     // Importantly, only setup Vite in development and after
     // setting up all the other routes so the catch-all route
     // doesn't interfere with the other routes
@@ -70,7 +59,7 @@ app.use((req, res, next) => {
 
     // ALWAYS serve the app on port 5000
     // This serves both the API and the client
-    const port = 5000;
+    const port = 3000;
     server.listen({
       port,
       host: "127.0.0.1", // Bind to localhost
@@ -81,18 +70,4 @@ app.use((req, res, next) => {
     log(`Failed to start server: ${err.message}`);
     process.exit(1);
   }
-=======
-  // Setup Vite in development mode
-  if (app.get("env") === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
-
-  // Start the server
-  const port = 5000;
-  server.listen(port, "127.0.0.1", () => {
-    log(`Server is running on http://127.0.0.1:${port}`);
-  });
->>>>>>> origin/main
 })();
