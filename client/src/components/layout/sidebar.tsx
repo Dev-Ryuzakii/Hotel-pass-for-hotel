@@ -1,13 +1,15 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Settings, Menu, Wallet, Bed } from "lucide-react";
+import { LayoutDashboard, Settings, Menu, Wallet, Bed, LogOut, Calendar } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Rooms", href: "/rooms", icon: Bed },
+  { name: "Bookings", href: "/bookings", icon: Calendar },
   { name: "Revenue", href: "/revenue", icon: Wallet },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
@@ -47,6 +49,8 @@ function NavLinks() {
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const hotelName = user?.hotelName || "Hotel Manager";
 
   return (
     <>
@@ -61,13 +65,23 @@ export default function Sidebar() {
           </SheetTrigger>
           <SheetContent side="left" className="w-60">
             <div className="flex h-16 shrink-0 items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Hotel Manager</h1>
+              <h1 className="text-2xl font-bold text-gray-900">{hotelName}</h1>
             </div>
             <NavLinks />
+            <div className="mt-auto pt-4 border-t">
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-x-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={logout}
+              >
+                <LogOut className="h-6 w-6" />
+                Logout
+              </Button>
+            </div>
           </SheetContent>
         </Sheet>
         <div className="flex-1">
-          <h1 className="text-lg font-bold text-gray-900">Hotel Manager</h1>
+          <h1 className="text-lg font-bold text-gray-900">{hotelName}</h1>
         </div>
       </div>
 
@@ -75,9 +89,19 @@ export default function Sidebar() {
       <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-60 lg:flex-col">
         <div className="flex grow flex-col gap-y-7 overflow-y-auto border-r border-gray-200 bg-white px-6 pb-2">
           <div className="flex h-16 shrink-0 items-center">
-            <h1 className="text-2xl font-bold text-gray-900">Hotel Manager</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{hotelName}</h1>
           </div>
           <NavLinks />
+          <div className="mt-auto pt-4 border-t">
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-x-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={logout}
+            >
+              <LogOut className="h-6 w-6" />
+              Logout
+            </Button>
+          </div>
         </div>
       </div>
     </>

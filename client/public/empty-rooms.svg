@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mountain Base -->
+  <path d="M50 300 L200 100 L350 300 Z" fill="#F3F4F6"/>
+  
+  <!-- Flag Pole -->
+  <line x1="200" y1="100" x2="200" y2="50" stroke="#7C3AED" stroke-width="4"/>
+  
+  <!-- Flag -->
+  <path d="M200 50 L250 65 L200 80 Z" fill="#7C3AED"/>
+  
+  <!-- Person -->
+  <circle cx="200" cy="150" r="15" fill="#7C3AED"/> <!-- Head -->
+  <line x1="200" y1="165" x2="200" y2="200" stroke="#7C3AED" stroke-width="4"/> <!-- Body -->
+  <line x1="200" y1="180" x2="180" y2="190" stroke="#7C3AED" stroke-width="4"/> <!-- Left Arm -->
+  <line x1="200" y1="180" x2="220" y2="190" stroke="#7C3AED" stroke-width="4"/> <!-- Right Arm -->
+  <line x1="200" y1="200" x2="185" y2="230" stroke="#7C3AED" stroke-width="4"/> <!-- Left Leg -->
+  <line x1="200" y1="200" x2="215" y2="230" stroke="#7C3AED" stroke-width="4"/> <!-- Right Leg -->
+  
+  <!-- Decorative Elements -->
+  <circle cx="150" cy="250" r="5" fill="#7C3AED"/>
+  <circle cx="250" cy="250" r="5" fill="#7C3AED"/>
+  <circle cx="100" cy="200" r="5" fill="#7C3AED"/>
+  <circle cx="300" cy="200" r="5" fill="#7C3AED"/>
+</svg> 

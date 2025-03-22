@@ -10,6 +10,8 @@ import Settings from "@/pages/settings";
 import Wallet from "@/pages/wallet";
 import AuthPage from "@/pages/auth";
 import ForgotPassword from "@/pages/forgot-password";
+import RoomsPage from "@/pages/rooms";
+import BookingsPage from "@/pages/bookings";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -23,6 +25,8 @@ function Router() {
           <main className="flex-1 overflow-auto bg-background pl-0 lg:pl-60">
             <Switch>
               <ProtectedRoute path="/" component={Dashboard} />
+              <ProtectedRoute path="/rooms" component={RoomsPage} />
+              <ProtectedRoute path="/bookings" component={BookingsPage} />
               <ProtectedRoute path="/wallet" component={Wallet} />
               <ProtectedRoute path="/settings" component={Settings} />
               <Route component={NotFound} />

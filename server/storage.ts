@@ -1,8 +1,23 @@
-import { type Hotel, type InsertHotel, type Room, type InsertRoom } from "@shared/schema";
+import { type Hotel, type InsertHotel, type Room, type InsertRoom, type InsertBooking } from "@shared/schema";
 import createMemoryStore from "memorystore";
 import session from "express-session";
 
 const MemoryStore = createMemoryStore(session);
+
+interface Booking {
+  id: number;
+  hotelId: number;
+  roomId: number;
+  roomName: string;
+  guestName: string;
+  guestEmail: string;
+  checkIn: string;
+  checkOut: string;
+  numberOfGuests: number;
+  totalPrice: number;
+  status: "pending" | "approved" | "rejected" | "completed";
+  createdAt: string;
+}
 
 export interface IStorage {
   // Hotel management
@@ -21,6 +36,12 @@ export interface IStorage {
   deleteRoom(id: number): Promise<void>;
   updateRoomAvailability(id: number, count: number): Promise<Room>;
 
+  // Booking management
+  getBookings(hotelId: number): Promise<Booking[]>;
+  getBooking(id: number): Promise<Booking | undefined>;
+  createBooking(booking: InsertBooking): Promise<Booking>;
+  updateBookingStatus(id: number, status: Booking['status']): Promise<Booking>;
+
   // Session store for authentication
   sessionStore: session.Store;
 }
@@ -34,17 +55,21 @@ interface ResetToken {
 export class MemStorage implements IStorage {
   private hotels: Map<number, Hotel>;
   private rooms: Map<number, Room>;
+  private bookings: Map<number, Booking>;
   private resetTokens: Map<string, ResetToken>;
   private currentHotelId: number;
   private currentRoomId: number;
+  private currentBookingId: number;
   readonly sessionStore: session.Store;
 
   constructor() {
     this.hotels = new Map();
     this.rooms = new Map();
+    this.bookings = new Map();
     this.resetTokens = new Map();
     this.currentHotelId = 1;
     this.currentRoomId = 1;
+    this.currentBookingId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000, // Clear expired entries every 24h
     });
@@ -132,6 +157,35 @@ export class MemStorage implements IStorage {
     const updatedRoom = { ...room, availableRooms };
     this.rooms.set(id, updatedRoom);
     return updatedRoom;
+  }
+
+  async getBookings(hotelId: number): Promise<Booking[]> {
+    return Array.from(this.bookings.values()).filter(
+      (booking) => booking.hotelId === hotelId
+    );
+  }
+
+  async getBooking(id: number): Promise<Booking | undefined> {
+    return this.bookings.get(id);
+  }
+
+  async createBooking(booking: InsertBooking): Promise<Booking> {
+    const newBooking: Booking = {
+      id: this.currentBookingId++,
+      ...booking,
+      createdAt: new Date().toISOString(),
+    };
+    this.bookings.set(newBooking.id, newBooking);
+    return newBooking;
+  }
+
+  async updateBookingStatus(id: number, status: Booking['status']): Promise<Booking> {
+    const booking = await this.getBooking(id);
+    if (!booking) throw new Error("Booking not found");
+
+    const updatedBooking = { ...booking, status };
+    this.bookings.set(id, updatedBooking);
+    return updatedBooking;
   }
 }
 

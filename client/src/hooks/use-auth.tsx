@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { type Hotel } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { create } from "zustand";
 
 type AuthContextType = {
   hotel: Hotel | null;
@@ -106,6 +107,59 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     </AuthContext.Provider>
   );
 }
+
+interface AuthState {
+  isAuthenticated: boolean;
+  user: Hotel | null;
+  token: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
+}
+
+export const useAuthStore = create<AuthState>((set) => ({
+  isAuthenticated: false,
+  user: null,
+  token: localStorage.getItem("token"),
+  login: async (email: string, password: string) => {
+    try {
+      const response = await apiRequest("POST", "/api/login", {
+        email,
+        password,
+      });
+      const { token, user } = response;
+      localStorage.setItem("token", token);
+      set({ isAuthenticated: true, user, token });
+    } catch (error) {
+      throw error;
+    }
+  },
+  logout: async () => {
+    try {
+      await apiRequest("POST", "/api/logout");
+      localStorage.removeItem("token");
+      set({ isAuthenticated: false, user: null, token: null });
+      window.location.href = "/auth";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  },
+  checkAuth: async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        set({ isAuthenticated: false, user: null, token: null });
+        return;
+      }
+
+      const response = await apiRequest("GET", "/api/hotel");
+      set({ isAuthenticated: true, user: response, token });
+    } catch (error) {
+      localStorage.removeItem("token");
+      set({ isAuthenticated: false, user: null, token: null });
+    }
+  },
+}));
 
 export function useAuth() {
   const context = useContext(AuthContext);

@@ -113,11 +113,7 @@ export const amenityOptions = [
   "Balcony",
 ] as const;
 
-export const bookingStatus = [
-  "pending",
-  "confirmed",
-  "cancelled",
-] as const;
+export const bookingStatus = ["pending", "approved", "rejected", "completed"] as const;
 
 export const paymentStatus = [
   "pending",
@@ -135,3 +131,15 @@ export const transactionStatus = [
   "completed",
   "failed",
 ] as const;
+
+export const bookingSchema = insertBookingSchema.extend({
+  id: z.number(),
+  hotelId: z.number(),
+  roomName: z.string(),
+  status: z.enum(bookingStatus),
+  createdAt: z.string(),
+});
+
+export const updateBookingStatusSchema = z.object({
+  status: z.enum(bookingStatus),
+});
