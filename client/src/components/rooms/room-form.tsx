@@ -67,13 +67,25 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
+      const payload = {
+        name: data.name,
+        location: data.type,
+        price: data.price,
+        amenities: data.amenities,
+        description: data.description,
+        bedrooms: data.totalRooms,
+        bathrooms: data.availableRooms > 0 ? data.availableRooms : 1,
+        maxGuests: data.capacity,
+        images: data.images?.map((url) => ({ url })),
+      };
+
       if (room) {
-        return apiRequest("PATCH", `/api/hotel/rooms/${room.id}`, data);
+        return apiRequest("PATCH", `/api/hotel/properties/${room.id}`, payload);
       }
-      return apiRequest("POST", "/api/hotel/rooms", data);
+      return apiRequest("POST", "/api/hotel/properties", payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hotel/rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hotel/properties"] });
       toast({ title: `Room ${room ? "updated" : "created"} successfully` });
       onSuccess();
     },

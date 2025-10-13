@@ -1,59 +1,68 @@
-import { useEffect, useRef } from "react";
-import { useAuthStore } from "./use-auth";
-import { useNotifications } from "@/stores/notifications";
+import { useEffect, useRef, useCallback } from 'react';
+import { useAuth } from './use-auth';
+
+const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
 
 export function useWebSocket() {
   const ws = useRef<WebSocket | null>(null);
-  const { token } = useAuthStore();
-  const { addNotification } = useNotifications();
+  const { token } = useAuth();
 
-  useEffect(() => {
+  const connect = useCallback(() => {
     if (!token) return;
 
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//127.0.0.1:3000/ws?token=${token}`;
+    try {
+      const wsUrl = new URL(WS_URL);
+      wsUrl.searchParams.set('token', token);
 
-    const setupWebSocket = () => {
-      try {
-        ws.current = new WebSocket(wsUrl);
+      ws.current = new WebSocket(wsUrl.toString());
 
-        ws.current.onopen = () => {
-          console.log("WebSocket connected");
-        };
+      ws.current.onopen = () => {
+        console.log('WebSocket connected');
+      };
 
-        ws.current.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === "notification") {
-              addNotification(data.notification);
-            }
-          } catch (error) {
-            console.error("Error parsing WebSocket message:", error);
-          }
-        };
-
-        ws.current.onerror = (error) => {
-          console.error("WebSocket error:", error);
-        };
-
-        ws.current.onclose = () => {
-          console.log("WebSocket disconnected");
-          // Attempt to reconnect after 5 seconds
-          setTimeout(setupWebSocket, 5000);
-        };
-      } catch (error) {
-        console.error("Error setting up WebSocket:", error);
+      ws.current.onclose = () => {
+        console.log('WebSocket disconnected');
         // Attempt to reconnect after 5 seconds
-        setTimeout(setupWebSocket, 5000);
-      }
-    };
+        setTimeout(connect, 5000);
+      };
 
-    setupWebSocket();
+      ws.current.onerror = (error) => {
+        console.error('WebSocket error:', error);
+      };
+
+      ws.current.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('WebSocket message:', data);
+          // Handle different message types here
+          switch (data.type) {
+            case 'notification':
+              // Handle notification
+              break;
+            case 'booking_update':
+              // Handle booking update
+              break;
+            default:
+              console.log('Unknown message type:', data.type);
+          }
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+    } catch (error) {
+      console.error('Error creating WebSocket:', error);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    connect();
 
     return () => {
       if (ws.current) {
         ws.current.close();
       }
     };
-  }, [token, addNotification]);
+  }, [connect]);
+
+  return ws.current;
 }

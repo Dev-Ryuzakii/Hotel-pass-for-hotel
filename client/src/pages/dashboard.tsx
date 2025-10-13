@@ -22,10 +22,10 @@ const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const { user } = useAuth();
-  const hotelName = user?.hotelName || "";
+  const hotelName = user?.name || "";
 
   const { data: rooms, isLoading: roomsLoading } = useQuery<Room[]>({
-    queryKey: ["/api/hotel/rooms"],
+    queryKey: ["/api/hotel/properties"],
   });
 
   const { data: bookings, isLoading: bookingsLoading } = useQuery<Booking[]>({

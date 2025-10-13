@@ -29,10 +29,10 @@ export default function RoomStatus({ rooms }: RoomStatusProps) {
 
   const updateAvailabilityMutation = useMutation({
     mutationFn: async ({ id, count }: { id: number; count: number }) => {
-      await apiRequest("PATCH", `/api/hotel/rooms/${id}/availability`, { count });
+      await apiRequest("PATCH", `/api/hotel/properties/${id}/availability`, { count });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hotel/rooms"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/hotel/properties"] });
       toast({ title: "Room availability updated" });
     },
     onError: (error: Error) => {

@@ -26,8 +26,8 @@ export default function Navbar() {
         return "Rooms";
       case "/bookings":
         return "Bookings";
-      case "/revenue":
-        return "Revenue";
+      case "/wallet":
+        return "Wallet";
       case "/settings":
         return "Settings";
       case "/profile":

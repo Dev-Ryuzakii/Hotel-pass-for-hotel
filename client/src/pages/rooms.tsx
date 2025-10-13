@@ -54,6 +54,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { z } from "zod";
+import { uploadPropertyImages } from "@/lib/hotelService";
 
 type RoomFormValues = z.infer<typeof insertRoomSchema>;
 
@@ -82,24 +83,33 @@ export default function RoomsPage() {
   });
 
   const { data: rooms, isLoading } = useQuery<Room[]>({
-    queryKey: ["/api/hotel/rooms"],
+    queryKey: ["/api/hotel/properties"],
   });
 
   const createRoomMutation = useMutation({
     mutationFn: async (data: RoomFormValues) => {
+      const payload = {
+        name: data.name,
+        location: data?.type ?? "Unknown Location",
+        price: data.price,
+        amenities: data.amenities,
+        description: data.description,
+        bedrooms: data.totalRooms,
+        bathrooms: data.availableRooms > 0 ? data.availableRooms : 1,
+        maxGuests: data.capacity,
+        images: data.images?.map((url) => ({ url })),
+      };
+
       if (selectedRoom) {
-        return apiRequest("PATCH", `/api/hotel/rooms/${selectedRoom.id}`, data);
+        return apiRequest("PATCH", `/api/hotel/properties/${selectedRoom.id}`, payload);
       }
-      return apiRequest("POST", "/api/hotel/rooms", {
-        ...data,
-        availableRooms: data.totalRooms,
-      });
+      return apiRequest("POST", "/api/hotel/properties", payload);
     },
     onMutate: () => {
       setIsSubmitting(true);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hotel/rooms"] });
+  queryClient.invalidateQueries({ queryKey: ["/api/hotel/properties"] });
       toast({ 
         title: "Success",
         description: selectedRoom ? "Room updated successfully" : "Room created successfully",
@@ -124,10 +134,10 @@ export default function RoomsPage() {
 
   const deleteRoomMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest("DELETE", `/api/hotel/rooms/${id}`);
+  await apiRequest("DELETE", `/api/hotel/properties/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/hotel/rooms"] });
+  queryClient.invalidateQueries({ queryKey: ["/api/hotel/properties"] });
       toast({ 
         title: "Success",
         description: "Room deleted successfully",
@@ -149,26 +159,24 @@ export default function RoomsPage() {
     mutationFn: async (files: File[]) => {
       const formData = new FormData();
       files.forEach((file) => {
-        formData.append('images', file);
+        formData.append("images", file);
       });
       try {
-        const response = await fetch('http://127.0.0.1:3000/api/upload/images', {
-          method: 'POST',
-          body: formData,
-          credentials: 'include',
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.text();
-          console.error('Upload error response:', errorData);
-          throw new Error(errorData || 'Failed to upload images');
+        const response = await uploadPropertyImages(formData);
+        const data = response.data as {
+          success?: boolean;
+          data?: { url: string }[];
+          message?: string;
+        };
+
+        if (!data?.success || !Array.isArray(data.data)) {
+          throw new Error(data?.message ?? "Failed to upload images");
         }
-        
-        const data = await response.json();
-        return data.urls as string[];
+
+        return data.data.map((image) => image.url);
       } catch (error) {
-        console.error('Upload error:', error);
-        throw new Error(error instanceof Error ? error.message : 'Failed to upload images');
+        console.error("Upload error:", error);
+        throw new Error(error instanceof Error ? error.message : "Failed to upload images");
       }
     },
     onError: (error) => {

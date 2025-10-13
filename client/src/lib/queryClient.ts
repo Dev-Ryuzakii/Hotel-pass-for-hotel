@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { API_BASE_URL } from "./axiosConfig";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
@@ -12,10 +13,22 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const res = await fetch(url, {
+  const endpoint = url.startsWith("http") ? url : `${API_BASE_URL}${url}`;
+  const token = localStorage.getItem("token");
+  const isFormData = typeof FormData !== "undefined" && data instanceof FormData;
+
+  const headers: Record<string, string> = {};
+  if (!isFormData && data !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const res = await fetch(endpoint, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
+    headers,
+    body: isFormData ? (data as FormData) : data !== undefined ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
@@ -40,6 +53,47 @@ export const getQueryFn: <T>(options: {
     await throwIfResNotOk(res);
     return await res.json();
   };
+
+// Utility functions for the specified endpoints
+export const authApi = {
+  register: (data: { username: string; email: string; password: string; role?: string; picture?: string }) =>
+    apiRequest("POST", "/api/auth/register", data),
+  login: (data: { email: string; password: string }) =>
+    apiRequest("POST", "/api/auth/login", data),
+  registerHotel: (data: { adminId: string; hotelName: string; location: string; description: string }) =>
+    apiRequest("POST", "/api/auth/register-hotel", data),
+};
+
+export const hotelApi = {
+  getProperties: () => apiRequest("GET", "/api/hotel/properties"),
+  addProperty: (data: {
+    name: string;
+    location: string;
+    price: number;
+    amenities: string[];
+    description: string;
+    bedrooms: number;
+    bathrooms: number;
+    maxGuests: number;
+    images?: { url: string; publicId?: string; caption?: string }[];
+  }) => apiRequest("POST", "/api/hotel/properties", data),
+  getBookings: () => apiRequest("GET", "/api/hotel/bookings"),
+  updateBookingStatus: (data: { bookingId: string; status: string }) =>
+    apiRequest("PATCH", "/api/hotel/bookings/status", data),
+  requestWithdrawal: (data: { amount: number }) =>
+    apiRequest("POST", "/api/hotel/withdrawals", data),
+  uploadPropertyImages: (formData: FormData) =>
+    apiRequest("POST", "/api/hotel/upload-images", formData),
+  uploadKycDocument: (formData: FormData) =>
+    apiRequest("POST", "/api/hotel/upload-kyc", formData),
+};
+
+export const kycApi = {
+  initiateKYC: (data: { userId: string; documentType: string; documentUrl: string }) =>
+    apiRequest("POST", "/api/auth/initiate-kyc", data),
+  verifyKYC: (data: { userId: string; status: string; rejectionReason?: string }) =>
+    apiRequest("POST", "/api/auth/kyc/verify", data),
+};
 
 export const queryClient = new QueryClient({
   defaultOptions: {

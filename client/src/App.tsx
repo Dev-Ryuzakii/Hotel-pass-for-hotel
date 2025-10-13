@@ -7,7 +7,7 @@ import { ProtectedRoute } from "@/lib/protected-route";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Settings from "@/pages/settings";
-import Wallet from "@/pages/wallet";
+import WalletPage from "@/pages/wallet";
 import AuthPage from "@/pages/auth";
 import ForgotPassword from "@/pages/forgot-password";
 import RoomsPage from "@/pages/rooms";
@@ -27,7 +27,7 @@ function Router() {
               <ProtectedRoute path="/" component={Dashboard} />
               <ProtectedRoute path="/rooms" component={RoomsPage} />
               <ProtectedRoute path="/bookings" component={BookingsPage} />
-              <ProtectedRoute path="/wallet" component={Wallet} />
+              <ProtectedRoute path="/wallet" component={WalletPage} />
               <ProtectedRoute path="/settings" component={Settings} />
               <Route component={NotFound} />
             </Switch>

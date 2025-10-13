@@ -7,22 +7,31 @@ import { create } from "zustand";
 
 type AuthContextType = {
   hotel: Hotel | null;
+  user: Hotel | null;
+  token: string | null;
   isLoading: boolean;
   error: Error | null;
   loginMutation: ReturnType<typeof useLoginMutation>;
   registerMutation: ReturnType<typeof useRegisterMutation>;
   logoutMutation: ReturnType<typeof useLogoutMutation>;
+  logout: () => void;
 };
 
 const useLoginMutation = () => {
   const { toast } = useToast();
   return useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      const res = await apiRequest("POST", "/api/login", credentials);
+      const res = await apiRequest("POST", "/api/auth/login", credentials);
       return res.json();
     },
-    onSuccess: (hotel: Hotel) => {
-      queryClient.setQueryData(["/api/hotel"], hotel);
+    onSuccess: (data: { token?: string; user?: Hotel; message?: string }) => {
+      if (data?.token) {
+        localStorage.setItem("token", data.token);
+      }
+      if (data?.user) {
+        queryClient.setQueryData(["/api/hotel"], data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
       toast({ title: "Login successful" });
     },
     onError: (error: Error) => {
@@ -46,11 +55,17 @@ const useRegisterMutation = () => {
       city: string;
       phone: string;
     }) => {
-      const res = await apiRequest("POST", "/api/register", data);
+      const res = await apiRequest("POST", "/api/auth/register", data);
       return res.json();
     },
-    onSuccess: (hotel: Hotel) => {
-      queryClient.setQueryData(["/api/hotel"], hotel);
+    onSuccess: (data: { token?: string; user?: Hotel; message?: string }) => {
+      if (data?.token) {
+        localStorage.setItem("token", data.token);
+      }
+      if (data?.user) {
+        queryClient.setQueryData(["/api/hotel"], data.user);
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
       toast({ title: "Registration successful" });
     },
     onError: (error: Error) => {
@@ -67,10 +82,12 @@ const useLogoutMutation = () => {
   const { toast } = useToast();
   return useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/logout");
+      await apiRequest("POST", "/api/auth/logout");
     },
     onSuccess: () => {
-      queryClient.setQueryData(["/api/hotel"], null);
+      queryClient.removeQueries({ queryKey: ["/api/hotel"] });
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
       toast({ title: "Logged out successfully" });
     },
   });
@@ -91,16 +108,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginMutation = useLoginMutation();
   const registerMutation = useRegisterMutation();
   const logoutMutation = useLogoutMutation();
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   return (
     <AuthContext.Provider
       value={{
         hotel: hotel ?? null,
+        user: hotel ?? null,
+        token,
         isLoading,
         error: error ?? null,
         loginMutation,
         registerMutation,
         logoutMutation,
+        logout: () => logoutMutation.mutate(),
       }}
     >
       {children}
@@ -123,21 +144,34 @@ export const useAuthStore = create<AuthState>((set) => ({
   token: localStorage.getItem("token"),
   login: async (email: string, password: string) => {
     try {
-      const response = await apiRequest("POST", "/api/login", {
+      const response = await apiRequest("POST", "/api/auth/login", {
         email,
         password,
       });
-      const { token, user } = response;
-      localStorage.setItem("token", token);
-      set({ isAuthenticated: true, user, token });
+      const data = await response.json();
+      if (!data?.token) {
+        throw new Error("Authentication token missing from response");
+      }
+
+      localStorage.setItem("token", data.token);
+      if (data.user) {
+        localStorage.setItem("user", JSON.stringify(data.user));
+      }
+
+      set({
+        isAuthenticated: true,
+        user: data.user ?? null,
+        token: data.token,
+      });
     } catch (error) {
       throw error;
     }
   },
   logout: async () => {
     try {
-      await apiRequest("POST", "/api/logout");
+      await apiRequest("POST", "/api/auth/logout");
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
       set({ isAuthenticated: false, user: null, token: null });
       window.location.href = "/auth";
     } catch (error) {
@@ -151,9 +185,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ isAuthenticated: false, user: null, token: null });
         return;
       }
+      const storedUser = localStorage.getItem("user");
+      const user = storedUser ? (JSON.parse(storedUser) as Hotel) : null;
 
-      const response = await apiRequest("GET", "/api/hotel");
-      set({ isAuthenticated: true, user: response, token });
+      set({ isAuthenticated: true, user, token });
     } catch (error) {
       localStorage.removeItem("token");
       set({ isAuthenticated: false, user: null, token: null });

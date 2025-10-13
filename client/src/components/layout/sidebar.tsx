@@ -10,7 +10,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Rooms", href: "/rooms", icon: Bed },
   { name: "Bookings", href: "/bookings", icon: Calendar },
-  { name: "Revenue", href: "/revenue", icon: Wallet },
+  { name: "Wallet", href: "/wallet", icon: Wallet },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -18,10 +18,10 @@ function NavLinks() {
   const [location] = useLocation();
 
   return (
-    <nav className="flex flex-1 flex-col pt-4">
+    <nav className="flex flex-1 flex-col pt-1">
       <ul role="list" className="flex flex-1 flex-col gap-y-7">
         <li>
-          <p className="text-sm font-medium text-gray-400 mb-2 py-3">DASHBOARD</p>
+          <p className="text-sm font-medium text-gray-400 mb-2 py-3"></p>
           <ul role="list" className="-mx-2 space-y-1">
             {navigation.map((item) => (
               <li key={item.name}>
@@ -50,7 +50,7 @@ function NavLinks() {
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const { user, logout } = useAuth();
-  const hotelName = user?.hotelName || "Hotel Manager";
+  const hotelName = user?.name || "HotelPass";
 
   return (
     <>
