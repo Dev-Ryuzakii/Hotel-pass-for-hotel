@@ -8,14 +8,14 @@ import RegisterForm from "@/components/auth/register-form";
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
-  const { hotel } = useAuth();
+  const { hotel, token } = useAuth();
 
   // Redirect to dashboard if already authenticated
   useEffect(() => {
-    if (hotel) {
-      setLocation("/");
+    if (hotel || token) {
+      setLocation("/dashboard");
     }
-  }, [hotel, setLocation]);
+  }, [hotel, token, setLocation]);
 
   return (
     <div className="min-h-screen flex">

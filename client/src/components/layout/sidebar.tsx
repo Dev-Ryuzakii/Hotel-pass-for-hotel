@@ -1,16 +1,17 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Settings, Menu, Wallet, Bed, LogOut, Calendar } from "lucide-react";
+import { LayoutDashboard, Settings, Menu, Wallet, Bed, LogOut, Calendar, FileText } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
 const navigation = [
-  { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Rooms", href: "/rooms", icon: Bed },
   { name: "Bookings", href: "/bookings", icon: Calendar },
   { name: "Wallet", href: "/wallet", icon: Wallet },
+  { name: "KYC", href: "/kyc", icon: FileText },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
@@ -25,18 +26,17 @@ function NavLinks() {
           <ul role="list" className="-mx-2 space-y-1">
             {navigation.map((item) => (
               <li key={item.name}>
-                <Link href={item.href}>
-                  <a
-                    className={cn(
-                      location === item.href
-                        ? "bg-gray-50 text-primary"
-                        : "text-gray-700 hover:text-primary hover:bg-gray-50",
-                      "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
-                    )}
-                  >
-                    <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
-                    {item.name}
-                  </a>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    location === item.href
+                      ? "bg-gray-50 text-primary"
+                      : "text-gray-700 hover:text-primary hover:bg-gray-50",
+                    "group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold"
+                  )}
+                >
+                  <item.icon className="h-6 w-6 shrink-0" aria-hidden="true" />
+                  {item.name}
                 </Link>
               </li>
             ))}

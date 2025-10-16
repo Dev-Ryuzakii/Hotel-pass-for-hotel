@@ -20,7 +20,7 @@ export default function Navbar() {
 
   const getPageTitle = (path: string) => {
     switch (path) {
-      case "/":
+      case "/dashboard":
         return "Dashboard";
       case "/rooms":
         return "Rooms";

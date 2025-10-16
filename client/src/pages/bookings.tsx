@@ -73,7 +73,7 @@ export default function BookingsPage() {
 
   const updateBookingMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: BookingStatus }) => {
-      return apiRequest("PATCH", "/api/hotel/bookings/status", { bookingId: id, status });
+      return apiRequest("PATCH", "/api/hotel/bookings/status", { bookingId: id.toString(), status: status.toUpperCase() });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hotel/bookings"] });

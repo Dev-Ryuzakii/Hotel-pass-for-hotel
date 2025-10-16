@@ -85,14 +85,8 @@ export default function WalletPage() {
   };
 
   const withdrawMutation = useMutation({
-    mutationFn: async ({ amount, bankAccount }: { amount: number; bankAccount: string }) => {
-      return apiRequest("POST", "/api/hotel/withdrawals", {
-        amount,
-        bankAccount,
-        bankName: bankAccounts.find((acc) => acc.account_number === bankAccount)?.bank_name,
-        accountName: bankAccounts.find((acc) => acc.account_number === bankAccount)?.account_name,
-        bankCode: bankAccounts.find((acc) => acc.account_number === bankAccount)?.bank_code,
-      });
+    mutationFn: async (data: { amount: number }) => {
+      return apiRequest("POST", "/api/hotel/withdrawals", data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hotel"] });
@@ -145,16 +139,7 @@ export default function WalletPage() {
       return;
     }
 
-    if (!bankAccount) {
-      toast({
-        title: "Missing bank account",
-        description: "Please select a bank account",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    withdrawMutation.mutate({ amount: numAmount, bankAccount });
+    withdrawMutation.mutate({ amount: numAmount });
   };
 
   if (!hotel) {

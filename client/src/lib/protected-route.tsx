@@ -10,7 +10,7 @@ export function ProtectedRoute({
   path: string;
   component: ComponentType;
 }) {
-  const { hotel, isLoading } = useAuth();
+  const { hotel, token, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -22,7 +22,7 @@ export function ProtectedRoute({
     );
   }
 
-  if (!hotel) {
+  if (!token && !hotel) {
     return (
       <Route path={path}>
         <Redirect to="/auth" />

@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/dashboard";
 import Settings from "@/pages/settings";
 import WalletPage from "@/pages/wallet";
+import KycPage from "@/pages/kyc";
 import AuthPage from "@/pages/auth";
 import ForgotPassword from "@/pages/forgot-password";
 import RoomsPage from "@/pages/rooms";
@@ -24,11 +25,12 @@ function Router() {
           <Sidebar />
           <main className="flex-1 overflow-auto bg-background pl-0 lg:pl-60">
             <Switch>
-              <ProtectedRoute path="/" component={Dashboard} />
+              <ProtectedRoute path="/dashboard" component={Dashboard} />
               <ProtectedRoute path="/rooms" component={RoomsPage} />
               <ProtectedRoute path="/bookings" component={BookingsPage} />
               <ProtectedRoute path="/wallet" component={WalletPage} />
               <ProtectedRoute path="/settings" component={Settings} />
+              <ProtectedRoute path="/kyc" component={KycPage} />
               <Route component={NotFound} />
             </Switch>
           </main>

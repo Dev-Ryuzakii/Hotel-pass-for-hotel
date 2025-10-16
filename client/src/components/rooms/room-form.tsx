@@ -21,11 +21,11 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import type { Room } from "@shared/schema";
 import { insertRoomSchema, roomTypes, amenityOptions } from "@shared/schema";
 import type { z } from "zod";
+import { hotelApi } from "@/lib/queryClient";
 
 interface RoomFormProps {
   room?: Room | null;
@@ -67,6 +67,51 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (data: FormData) => {
+      // Handle image uploads first
+      let uploadedImages: { url: string }[] = [];
+      let imageObjects: { url: string }[] = [];
+      
+      if (data.images && data.images.length > 0) {
+        // Filter out already uploaded images (URLs) and only upload base64 images
+        const base64Images = data.images.filter((img: string) => img.startsWith('data:'));
+        const existingImages = data.images.filter((img: string) => !img.startsWith('data:'));
+        
+        if (base64Images.length > 0) {
+          const formData = new FormData();
+          // Convert base64 to blobs for upload
+          for (let i = 0; i < base64Images.length; i++) {
+            const base64 = base64Images[i];
+            const byteString = atob(base64.split(',')[1]);
+            const mimeString = base64.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let j = 0; j < byteString.length; j++) {
+              ia[j] = byteString.charCodeAt(j);
+            }
+            const blob = new Blob([ab], { type: mimeString });
+            formData.append('images', blob, `image-${i}.jpg`);
+          }
+          
+          try {
+            // Use the hotelApi function which properly handles authentication
+            const response = await hotelApi.uploadPropertyImages(formData);
+            const result = await response.json();
+            if (result && result.success && Array.isArray(result.data)) {
+              uploadedImages = result.data;
+            }
+          } catch (uploadError) {
+            console.error('Image upload error:', uploadError);
+            throw new Error('Failed to upload images');
+          }
+        }
+        
+        // Combine existing URLs with newly uploaded image URLs
+        imageObjects = [
+          ...existingImages.map((url: string) => ({ url })), 
+          ...uploadedImages
+        ];
+      }
+
       const payload = {
         name: data.name,
         location: data.type,
@@ -76,23 +121,25 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
         bedrooms: data.totalRooms,
         bathrooms: data.availableRooms > 0 ? data.availableRooms : 1,
         maxGuests: data.capacity,
-        images: data.images?.map((url) => ({ url })),
+        images: imageObjects.length > 0 ? imageObjects : (data.images || []).map((url: string) => ({ url }))
       };
 
       if (room) {
-        return apiRequest("PATCH", `/api/hotel/properties/${room.id}`, payload);
+        const response = await hotelApi.addProperty(payload);
+        return response.json();
       }
-      return apiRequest("POST", "/api/hotel/properties", payload);
+      const response = await hotelApi.addProperty(payload);
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/hotel/properties"] });
-      toast({ title: `Room ${room ? "updated" : "created"} successfully` });
+      toast({ title: `Property ${room ? "updated" : "created"} successfully` });
       onSuccess();
     },
     onError: (error: Error) => {
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || 'Failed to save property',
         variant: "destructive",
       });
     },
@@ -156,11 +203,11 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select room type" />
+                    <SelectValue placeholder="Select property type" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {roomTypes.map((type) => (
+                  {roomTypes.map((type: string) => (
                     <SelectItem key={type} value={type}>
                       {type}
                     </SelectItem>
@@ -249,7 +296,7 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
                                 return checked
                                   ? field.onChange([...field.value, amenity])
                                   : field.onChange(
-                                      field.value?.filter((value) => value !== amenity)
+                                      field.value?.filter((value: string) => value !== amenity)
                                     );
                               }}
                             />
@@ -290,7 +337,7 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
         {/* Display uploaded images */}
         {form.watch("images")?.length > 0 && (
           <div className="flex flex-wrap gap-2">
-            {form.watch("images").map((image, index) => (
+            {form.watch("images").map((image: string, index: number) => (
               <img
                 key={index}
                 src={image}
@@ -340,7 +387,7 @@ export default function RoomForm({ room, onSuccess }: RoomFormProps) {
         </div>
 
         <Button type="submit" className="w-full" disabled={mutation.isPending}>
-          {mutation.isPending ? "Saving..." : room ? "Update Room" : "Create Room"}
+          {mutation.isPending ? "Saving..." : room ? "Update Property" : "Create Property"}
         </Button>
       </form>
     </Form>

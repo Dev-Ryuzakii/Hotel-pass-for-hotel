@@ -4,6 +4,7 @@ import { type Hotel } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { create } from "zustand";
+import { useLocation } from "wouter";
 
 type AuthContextType = {
   hotel: Hotel | null;
@@ -19,6 +20,7 @@ type AuthContextType = {
 
 const useLoginMutation = () => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   return useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
       const res = await apiRequest("POST", "/api/auth/login", credentials);
@@ -33,6 +35,8 @@ const useLoginMutation = () => {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
       toast({ title: "Login successful" });
+      // Redirect to dashboard after successful login
+      setLocation("/dashboard");
     },
     onError: (error: Error) => {
       toast({
@@ -46,14 +50,14 @@ const useLoginMutation = () => {
 
 const useRegisterMutation = () => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   return useMutation({
     mutationFn: async (data: {
-      name: string;
+      username?: string;
       email: string;
       password: string;
-      address: string;
-      city: string;
-      phone: string;
+      role?: string;
+      picture?: string;
     }) => {
       const res = await apiRequest("POST", "/api/auth/register", data);
       return res.json();
@@ -67,6 +71,8 @@ const useRegisterMutation = () => {
         localStorage.setItem("user", JSON.stringify(data.user));
       }
       toast({ title: "Registration successful" });
+      // Redirect to dashboard after successful registration
+      setLocation("/dashboard");
     },
     onError: (error: Error) => {
       toast({
@@ -80,6 +86,7 @@ const useRegisterMutation = () => {
 
 const useLogoutMutation = () => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   return useMutation({
     mutationFn: async () => {
       await apiRequest("POST", "/api/auth/logout");
@@ -89,6 +96,20 @@ const useLogoutMutation = () => {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       toast({ title: "Logged out successfully" });
+      // Redirect to auth page after successful logout
+      setLocation("/auth");
+    },
+    onError: (error: Error) => {
+      // Even if API call fails, still clear local data and redirect
+      queryClient.removeQueries({ queryKey: ["/api/hotel"] });
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      toast({ 
+        title: "Logged out", 
+        description: "Session ended" 
+      });
+      // Redirect to auth page
+      setLocation("/auth");
     },
   });
 };
@@ -175,6 +196,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ isAuthenticated: false, user: null, token: null });
       window.location.href = "/auth";
     } catch (error) {
+      // Even if API call fails, still clear local data and redirect
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      set({ isAuthenticated: false, user: null, token: null });
+      window.location.href = "/auth";
       console.error("Logout error:", error);
     }
   },

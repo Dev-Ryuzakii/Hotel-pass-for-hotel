@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Link } from "wouter";
+import { Eye, EyeOff } from "lucide-react";
+import { useState } from "react";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -30,6 +32,8 @@ export default function LoginForm() {
       password: "",
     },
   });
+  
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <Form {...form}>
@@ -56,18 +60,34 @@ export default function LoginForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" {...field} />
-              </FormControl>
+              <div className="relative">
+                <FormControl>
+                  <Input type={showPassword ? "text" : "password"} {...field} />
+                </FormControl>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                  <span className="sr-only">
+                    {showPassword ? "Hide password" : "Show password"}
+                  </span>
+                </Button>
+              </div>
               <FormMessage />
             </FormItem>
           )}
         />
         <div className="flex justify-end">
-          <Link href="/forgot-password">
-            <a className="text-sm text-primary hover:underline">
-              Forgot password?
-            </a>
+          <Link href="/forgot-password" className="text-sm text-primary hover:underline">
+            Forgot password?
           </Link>
         </div>
         <Button

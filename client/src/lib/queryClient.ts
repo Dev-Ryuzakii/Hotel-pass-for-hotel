@@ -65,6 +65,7 @@ export const authApi = {
 };
 
 export const hotelApi = {
+  getHotel: () => apiRequest("GET", "/api/hotel"),
   getProperties: () => apiRequest("GET", "/api/hotel/properties"),
   addProperty: (data: {
     name: string;

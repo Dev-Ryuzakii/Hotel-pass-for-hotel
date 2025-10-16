@@ -82,11 +82,11 @@ export function NotificationsDropdown() {
         <div className="h-px bg-border" />
         <DropdownMenuItem
           className="text-center text-sm"
-          onClick={() => setLocation("/notifications")}
+          onClick={() => setLocation("/dashboard")}
         >
           View all notifications
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
-} 
+}

@@ -60,8 +60,8 @@ export default function StatsCards({ rooms, bookings }: StatsCardsProps) {
     : 0;
 
   return (
-    <div className="grid gap-1 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="h-[180px] w-[350px]">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card className="h-[180px]">
         <CardHeader className="flex flex-row justify-between space-y-0 pb-1">
           <CardTitle className="text-base font-medium">Revenue</CardTitle>
           <Banknote className="h-4 w-4 text-muted-foreground" />
@@ -76,7 +76,7 @@ export default function StatsCards({ rooms, bookings }: StatsCardsProps) {
         </CardContent>
       </Card>
 
-      <Card className="h-[180px] w-[350px]">
+      <Card className="h-[180px]">
         <CardHeader className="flex flex-row justify-between space-y-0 pb-1">
           <CardTitle className="text-base font-medium">Booked Rooms</CardTitle>
           <Users className="h-4 w-4 text-muted-foreground" />
@@ -91,7 +91,7 @@ export default function StatsCards({ rooms, bookings }: StatsCardsProps) {
         </CardContent>
       </Card>
 
-      <Card className="h-[180px] w-[350px]">
+      <Card className="h-[180px]">
         <CardHeader className="flex flex-row justify-between space-y-0 pb-1">
           <CardTitle className="text-base font-medium">Average Price</CardTitle>
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -104,7 +104,7 @@ export default function StatsCards({ rooms, bookings }: StatsCardsProps) {
         </CardContent>
       </Card>
 
-      <Card className="h-[180px] w-[350px]">
+      <Card className="h-[180px]">
         <CardHeader className="flex flex-row justify-between space-y-0 pb-1">
           <CardTitle className="text-base font-medium">Occupancy Rate</CardTitle>
           <Percent className="h-4 w-4 text-muted-foreground" />

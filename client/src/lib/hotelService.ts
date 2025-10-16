@@ -2,6 +2,7 @@ import axios from "axios";
 
 const API_URL = "/api/hotel";
 
+export const getHotel = () => axios.get(`${API_URL}`);
 export const getProperties = () => axios.get(`${API_URL}/properties`);
 export const addProperty = (data: {
   name: string;
@@ -32,10 +33,14 @@ export const updateBookingStatus = (data: { bookingId: string; status: string })
   axios.patch(`${API_URL}/bookings/status`, data);
 export const requestWithdrawal = (data: { amount: number }) =>
   axios.post(`${API_URL}/withdrawals`, data);
-export const uploadPropertyImages = (formData: FormData) =>
-  axios.post(`${API_URL}/upload-images`, formData, {
-    headers: { "Content-Type": "multipart/form-data" },
+export const uploadPropertyImages = (formData: FormData) => {
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  return axios.post(`${API_URL}/upload-images`, formData, {
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
   });
+};
 export const uploadKycDocument = (formData: FormData) =>
   axios.post(`${API_URL}/upload-kyc`, formData, {
     headers: { "Content-Type": "multipart/form-data" },
