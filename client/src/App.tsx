@@ -18,7 +18,7 @@ import Sidebar from "@/components/layout/sidebar";
 function Router() {
   return (
     <Switch>
-      <Route path="/auth" component={AuthPage} />
+      <Route path="/" component={AuthPage} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="*">
         <div className="flex min-h-screen flex-col lg:flex-row">
