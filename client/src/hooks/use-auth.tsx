@@ -97,7 +97,7 @@ const useLogoutMutation = () => {
       localStorage.removeItem("user");
       toast({ title: "Logged out successfully" });
       // Redirect to auth page after successful logout
-      setLocation("/auth");
+      setLocation("/");
     },
     onError: (error: Error) => {
       // Even if API call fails, still clear local data and redirect
@@ -109,7 +109,7 @@ const useLogoutMutation = () => {
         description: "Session ended" 
       });
       // Redirect to auth page
-      setLocation("/auth");
+      setLocation("/");
     },
   });
 };
