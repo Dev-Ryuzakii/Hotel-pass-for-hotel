@@ -56,12 +56,22 @@ export const getQueryFn: <T>(options: {
 
 // Utility functions for the specified endpoints
 export const authApi = {
-  register: (data: { username: string; email: string; password: string; role?: string; picture?: string }) =>
-    apiRequest("POST", "/api/auth/register", data),
+  register: (data: { 
+    username: string; 
+    email: string; 
+    password: string; 
+    hotelName: string;
+    location: string;
+    description: string;
+    contactInfo: {
+      phone: string;
+      email: string;
+      website: string;
+    };
+  }) =>
+    apiRequest("POST", "/api/hotel/auth/register", data),
   login: (data: { email: string; password: string }) =>
-    apiRequest("POST", "/api/auth/login", data),
-  registerHotel: (data: { adminId: string; hotelName: string; location: string; description: string }) =>
-    apiRequest("POST", "/api/auth/register-hotel", data),
+    apiRequest("POST", "/api/hotel/auth/login", data),
 };
 
 export const hotelApi = {

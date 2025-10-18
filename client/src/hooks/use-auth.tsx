@@ -1,7 +1,7 @@
 import { createContext, ReactNode, useContext } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { type Hotel } from "@shared/schema";
-import { getQueryFn, apiRequest, queryClient } from "@/lib/queryClient";
+import { getQueryFn, apiRequest, queryClient, authApi } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { create } from "zustand";
 import { useLocation } from "wouter";
@@ -23,7 +23,7 @@ const useLoginMutation = () => {
   const [, setLocation] = useLocation();
   return useMutation({
     mutationFn: async (credentials: { email: string; password: string }) => {
-      const res = await apiRequest("POST", "/api/auth/login", credentials);
+      const res = await authApi.login(credentials);
       return res.json();
     },
     onSuccess: (data: { token?: string; user?: Hotel; message?: string }) => {
@@ -53,13 +53,19 @@ const useRegisterMutation = () => {
   const [, setLocation] = useLocation();
   return useMutation({
     mutationFn: async (data: {
-      username?: string;
+      username: string;
       email: string;
       password: string;
-      role?: string;
-      picture?: string;
+      hotelName: string;
+      location: string;
+      description: string;
+      contactInfo: {
+        phone: string;
+        email: string;
+        website: string;
+      };
     }) => {
-      const res = await apiRequest("POST", "/api/auth/register", data);
+      const res = await authApi.register(data);
       return res.json();
     },
     onSuccess: (data: { token?: string; user?: Hotel; message?: string }) => {
@@ -97,7 +103,7 @@ const useLogoutMutation = () => {
       localStorage.removeItem("user");
       toast({ title: "Logged out successfully" });
       // Redirect to auth page after successful logout
-      setLocation("/");
+      setLocation("/auth");
     },
     onError: (error: Error) => {
       // Even if API call fails, still clear local data and redirect
@@ -109,7 +115,7 @@ const useLogoutMutation = () => {
         description: "Session ended" 
       });
       // Redirect to auth page
-      setLocation("/");
+      setLocation("/auth");
     },
   });
 };
@@ -165,10 +171,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   token: localStorage.getItem("token"),
   login: async (email: string, password: string) => {
     try {
-      const response = await apiRequest("POST", "/api/auth/login", {
-        email,
-        password,
-      });
+      const response = await authApi.login({ email, password });
       const data = await response.json();
       if (!data?.token) {
         throw new Error("Authentication token missing from response");

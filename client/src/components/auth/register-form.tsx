@@ -13,19 +13,20 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { authApi } from "@/lib/queryClient";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 
 const registerSchema = z.object({
+  username: z.string().min(1, "Username is required"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   hotelName: z.string().min(1, "Hotel name is required"),
   location: z.string().min(1, "Location is required"),
   description: z.string().min(1, "Description is required"),
+  phone: z.string().optional(),
+  website: z.string().optional(),
 });
 
 type RegisterValues = z.infer<typeof registerSchema>;
@@ -35,36 +36,17 @@ export default function RegisterForm() {
   const { registerMutation } = useAuth();
   const [, setLocation] = useLocation();
   
-  // Hotel registration mutation
-  const hotelRegisterMutation = useMutation({
-    mutationFn: async (data: { adminId: string; hotelName: string; location: string; description: string }) => {
-      return authApi.registerHotel(data);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Hotel registered successfully",
-      });
-      // Redirect to dashboard after successful registration
-      setLocation("/dashboard");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to register hotel",
-        variant: "destructive",
-      });
-    },
-  });
-  
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
+      username: "",
       email: "",
       password: "",
       hotelName: "",
       location: "",
       description: "",
+      phone: "",
+      website: "",
     },
   });
   
@@ -74,36 +56,41 @@ export default function RegisterForm() {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(async (data) => {
-          // First, register the user
-          try {
-            const userData = {
-              username: data.email.split('@')[0], // Use email prefix as username
+          const registerData = {
+            username: data.username,
+            email: data.email,
+            password: data.password,
+            hotelName: data.hotelName,
+            location: data.location,
+            description: data.description,
+            contactInfo: {
+              phone: data.phone || "",
               email: data.email,
-              password: data.password,
-            };
-            
-            const userResponse = await registerMutation.mutateAsync(userData);
-            
-            // After successful user registration, register the hotel
-            if (userResponse && userResponse.user && userResponse.user.id) {
-              const hotelData = {
-                adminId: userResponse.user.id.toString(),
-                hotelName: data.hotelName,
-                location: data.location,
-                description: data.description
-              };
-              
-              await hotelRegisterMutation.mutateAsync(hotelData);
-            } else {
-              // If hotel registration fails, still redirect to dashboard
-              setLocation("/dashboard");
+              website: data.website || "",
             }
+          };
+          
+          try {
+            await registerMutation.mutateAsync(registerData);
           } catch (error) {
             console.error("Registration error:", error);
           }
         })}
         className="space-y-4"
       >
+        <FormField
+          control={form.control}
+          name="username"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <FormField
           control={form.control}
           name="email"
@@ -187,12 +174,38 @@ export default function RegisterForm() {
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="phone"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Phone (Optional)</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="website"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Website (Optional)</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         <Button
           type="submit"
           className="w-full"
-          disabled={registerMutation.isPending || hotelRegisterMutation.isPending}
+          disabled={registerMutation.isPending}
         >
-          {(registerMutation.isPending || hotelRegisterMutation.isPending) ? "Creating account..." : "Create Account"}
+          {registerMutation.isPending ? "Creating account..." : "Create Account"}
         </Button>
       </form>
     </Form>

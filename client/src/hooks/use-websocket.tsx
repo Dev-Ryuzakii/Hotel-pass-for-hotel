@@ -1,10 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useAuth } from './use-auth';
 
-const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
+const WS_URL = import.meta.env.VITE_WS_URL || 'wss://hotelpass-api-gtml.onrender.com';
 
 export function useWebSocket() {
   const ws = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { token } = useAuth();
 
   const connect = useCallback(() => {
@@ -22,8 +23,8 @@ export function useWebSocket() {
 
       ws.current.onclose = () => {
         console.log('WebSocket disconnected');
-        // Attempt to reconnect after 5 seconds
-        setTimeout(connect, 5000);
+        // Attempt to reconnect after 5 seconds (only if component is still mounted)
+        reconnectTimeoutRef.current = setTimeout(connect, 5000);
       };
 
       ws.current.onerror = (error) => {
@@ -58,6 +59,10 @@ export function useWebSocket() {
     connect();
 
     return () => {
+      // Clear reconnect timeout on unmount
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
       if (ws.current) {
         ws.current.close();
       }
