@@ -89,7 +89,30 @@ export default function RoomsPage() {
     queryKey: ["/api/hotel/properties"],
     queryFn: async () => {
       const response = await getProperties();
-      return response.data.data || [];
+      const apiRooms = response.data.data || [];
+      
+      // Transform API response to match Room type
+      return apiRooms.map((room: any) => {
+        // Handle the case where images might be objects with url property
+        let images: string[] = [];
+        if (Array.isArray(room.images)) {
+          images = room.images.map((img: any) => {
+            if (typeof img === 'string') {
+              return img;
+            }
+            if (img && typeof img === 'object' && img.url) {
+              return img.url;
+            }
+            return '';
+          });
+        }
+        
+        return {
+          ...room,
+          id: room._id,
+          images: images
+        };
+      });
     },
   });
 
@@ -551,29 +574,29 @@ export default function RoomsPage() {
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-end mb-8">
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogTrigger asChild>
+          <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Room
               </Button>
-          </DialogTrigger>
+            </DialogTrigger>
             <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
+              <DialogHeader>
                 <DialogTitle>{selectedRoom ? 'Edit Room' : 'Add New Room'}</DialogTitle>
                 <DialogDescription>
                   {selectedRoom 
                     ? 'Edit the details of your room. All fields are required.'
                     : 'Add a new room to your hotel. All fields are required.'}
                 </DialogDescription>
-            </DialogHeader>
+              </DialogHeader>
               {formContent}
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {rooms?.map((room) => (
+          {rooms?.map((room) => (
             <Card 
               key={room.id} 
               className="relative overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"

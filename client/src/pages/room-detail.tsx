@@ -16,10 +16,14 @@ export default function RoomDetailPage() {
   const { data: room, isLoading, error } = useQuery<Room>({
     queryKey: [`/api/hotel/properties/${id}`],
     queryFn: async () => {
+      // Check if id is valid before making the request
+      if (!id || id === 'undefined') {
+        throw new Error('Invalid room ID');
+      }
       const response = await apiRequest("GET", `/api/hotel/properties/${id}`);
       return response.json();
     },
-    enabled: !!id,
+    enabled: !!(id && id !== 'undefined'),
   });
 
   if (isLoading) {
@@ -31,11 +35,19 @@ export default function RoomDetailPage() {
   }
 
   if (error) {
+    // Check if it's an invalid ID error
+    const errorMessage = (error as Error)?.message || "Failed to load room details. Please try again.";
+    const isInvalidId = !id || id === 'undefined' || errorMessage.includes('Invalid room ID');
+    
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <h2 className="text-2xl font-bold">Error loading room</h2>
-          <p className="text-muted-foreground">{(error as Error)?.message || "Failed to load room details. Please try again."}</p>
+          <h2 className="text-2xl font-bold">{isInvalidId ? "Invalid Room ID" : "Error loading room"}</h2>
+          <p className="text-muted-foreground">
+            {isInvalidId 
+              ? "The room ID is invalid or missing. Please go back and select a valid room." 
+              : errorMessage}
+          </p>
           <Button onClick={() => setLocation("/rooms")} className="mt-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Rooms
