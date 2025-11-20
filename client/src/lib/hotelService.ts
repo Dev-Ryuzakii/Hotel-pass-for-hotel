@@ -4,6 +4,7 @@ const API_URL = "/api/hotel";
 
 export const getHotel = () => axios.get(`${API_URL}`);
 export const getProperties = () => axios.get(`${API_URL}/properties`);
+export const getPropertyById = (id: string) => axios.get(`${API_URL}/properties/${id}`);
 export const addProperty = (data: {
   name: string;
   location: string;

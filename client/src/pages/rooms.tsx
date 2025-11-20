@@ -23,6 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { Plus, Pencil, Trash2, ImagePlus, X } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { getProperties, addProperty, updateProperty, deleteProperty } from "@/lib/hotelService";
 import { insertRoomSchema, roomTypes, amenityOptions } from "@shared/schema";
 import type { Room } from "@shared/schema";
 import { queryClient } from "@/lib/queryClient";
@@ -55,11 +56,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { z } from "zod";
 import { uploadPropertyImages } from "@/lib/hotelService";
+import { useLocation } from "wouter";
 
 type RoomFormValues = z.infer<typeof insertRoomSchema>;
 
 export default function RoomsPage() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
@@ -84,6 +87,10 @@ export default function RoomsPage() {
 
   const { data: rooms, isLoading } = useQuery<Room[]>({
     queryKey: ["/api/hotel/properties"],
+    queryFn: async () => {
+      const response = await getProperties();
+      return response.data.data || [];
+    },
   });
 
   const createRoomMutation = useMutation({
@@ -101,9 +108,9 @@ export default function RoomsPage() {
       };
 
       if (selectedRoom) {
-        return apiRequest("PATCH", `/api/hotel/properties/${selectedRoom.id}`, payload);
+        return updateProperty(selectedRoom.id.toString(), payload);
       }
-      return apiRequest("POST", "/api/hotel/properties", payload);
+      return addProperty(payload);
     },
     onMutate: () => {
       setIsSubmitting(true);
@@ -134,7 +141,7 @@ export default function RoomsPage() {
 
   const deleteRoomMutation = useMutation({
     mutationFn: async (id: number) => {
-  await apiRequest("DELETE", `/api/hotel/properties/${id}`);
+      await deleteProperty(id.toString());
     },
     onSuccess: () => {
   queryClient.invalidateQueries({ queryKey: ["/api/hotel/properties"] });
@@ -312,6 +319,10 @@ export default function RoomsPage() {
   const handleDeleteRoom = (room: Room) => {
     setSelectedRoom(room);
     setDeleteDialogOpen(true);
+  };
+
+  const handleViewRoom = (room: Room) => {
+    setLocation(`/rooms/${room.id}`);
   };
 
   const formContent = (
@@ -563,21 +574,25 @@ export default function RoomsPage() {
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {rooms?.map((room) => (
-            <Card key={room.id} className="relative overflow-hidden">
+            <Card 
+              key={room.id} 
+              className="relative overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+              onClick={() => handleViewRoom(room)}
+            >
               <div className="absolute top-4 right-4 z-10">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
                       <span className="sr-only">Open menu</span>
                       <Pencil className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleEditRoom(room)}>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleEditRoom(room); }}>
                       Edit Room
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => handleDeleteRoom(room)}
+                      onClick={(e) => { e.stopPropagation(); handleDeleteRoom(room); }}
                       className="text-red-600"
                     >
                       Delete Room
@@ -600,7 +615,7 @@ export default function RoomsPage() {
               </div>
               <div className="p-6">
                 <h3 className="text-lg font-semibold mb-2">{room.name}</h3>
-                <p className="text-sm text-muted-foreground mb-4">{room.description}</p>
+                <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{room.description}</p>
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Price</span>
@@ -623,7 +638,7 @@ export default function RoomsPage() {
                   <div className="mt-4">
                     <p className="text-sm text-muted-foreground mb-2">Amenities:</p>
                     <div className="flex flex-wrap gap-2">
-                      {room.amenities.map((amenity) => (
+                      {room.amenities.slice(0, 3).map((amenity) => (
                         <span
                           key={amenity}
                           className="text-xs bg-muted px-2 py-1 rounded-full"
@@ -631,6 +646,11 @@ export default function RoomsPage() {
                           {amenity}
                         </span>
                       ))}
+                      {room.amenities.length > 3 && (
+                        <span className="text-xs bg-muted px-2 py-1 rounded-full">
+                          +{room.amenities.length - 3} more
+                        </span>
+                      )}
                 </div>
               </div>
                 )}

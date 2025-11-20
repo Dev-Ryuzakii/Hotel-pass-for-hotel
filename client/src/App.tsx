@@ -13,6 +13,8 @@ import AuthPage from "@/pages/auth";
 import ForgotPassword from "@/pages/forgot-password";
 import RoomsPage from "@/pages/rooms";
 import BookingsPage from "@/pages/bookings";
+import RoomDetailPage from "@/pages/room-detail";
+import EditRoomPage from "@/pages/edit-room";
 import Sidebar from "@/components/layout/sidebar";
 
 function Router() {
@@ -27,6 +29,8 @@ function Router() {
             <Switch>
               <ProtectedRoute path="/dashboard" component={Dashboard} />
               <ProtectedRoute path="/rooms" component={RoomsPage} />
+              <ProtectedRoute path="/rooms/:id" component={RoomDetailPage} />
+              <ProtectedRoute path="/rooms/edit/:id" component={EditRoomPage} />
               <ProtectedRoute path="/bookings" component={BookingsPage} />
               <ProtectedRoute path="/wallet" component={WalletPage} />
               <ProtectedRoute path="/settings" component={Settings} />

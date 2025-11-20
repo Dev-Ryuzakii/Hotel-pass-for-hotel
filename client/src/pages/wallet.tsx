@@ -53,6 +53,10 @@ export default function WalletPage() {
 
   const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery<Transaction[]>({
     queryKey: ["/api/hotel/wallet/transactions"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/hotel/wallet/transactions");
+      return response.json();
+    },
   });
 
   const formatAmount = (amount: number) => {
